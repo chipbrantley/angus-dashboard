@@ -17,14 +17,10 @@ exports.handler = async (event) => {
       if (!res.ok) throw new Error(`Tasks API ${res.status}`);
       const data = await res.json();
 
+      // Sort by position — matches "My order" in the Google Tasks interface.
       const tasks = (data.items || [])
         .filter((t) => t.status !== 'completed')
-        .sort((a, b) => {
-          if (a.due && b.due) return a.due.localeCompare(b.due);
-          if (a.due) return -1;
-          if (b.due) return 1;
-          return (a.position || '').localeCompare(b.position || '');
-        })
+        .sort((a, b) => (a.position || '').localeCompare(b.position || ''))
         .map((t) => ({ id: t.id, title: t.title, due: t.due || null, notes: t.notes || null }));
 
       return json(200, { tasks });
