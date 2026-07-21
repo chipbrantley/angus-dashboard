@@ -17,11 +17,26 @@ exports.handler = async (event) => {
       if (!res.ok) throw new Error(`Tasks API ${res.status}`);
       const data = await res.json();
 
-      // Sort by position — matches "My order" in the Google Tasks interface.
-      const tasks = (data.items || [])
-        .filter((t) => t.status !== 'completed')
-        .sort((a, b) => (a.position || '').localeCompare(b.position || ''))
-        .map((t) => ({ id: t.id, title: t.title, due: t.due || null, notes: t.notes || null }));
+      // Match "My order" in the Google Tasks interface. `position` only orders
+      // siblings, so sort top-level tasks and each parent's subtasks separately,
+      // then flatten parent-first like the UI shows them.
+      const items = (data.items || []).filter((t) => t.status !== 'completed');
+      const byPos = (a, b) => (a.position || '').localeCompare(b.position || '');
+      const topLevel = items.filter((t) => !t.parent).sort(byPos);
+      const children = {};
+      items.filter((t) => t.parent).forEach((t) => {
+        (children[t.parent] = children[t.parent] || []).push(t);
+      });
+      Object.values(children).forEach((arr) => arr.sort(byPos));
+      const ordered = [];
+      topLevel.forEach((t) => {
+        ordered.push(t);
+        (children[t.id] || []).forEach((k) => ordered.push(k));
+      });
+      // Subtasks whose parent is completed/hidden would otherwise vanish — append them.
+      const seen = new Set(ordered.map((t) => t.id));
+      items.filter((t) => !seen.has(t.id)).sort(byPos).forEach((t) => ordered.push(t));
+      const tasks = ordered.map((t) => ({ id: t.id, title: t.title, due: t.due || null, notes: t.notes || null }));
 
       return json(200, { tasks });
     }
