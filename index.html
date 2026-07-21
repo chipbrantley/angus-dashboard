@@ -357,19 +357,16 @@ const COURSES=[
 // (tap adds one; tapping when full resets). Fill in the — blanks
 // (wake time, sleep hours, study minutes) once he picks his numbers.
 const BASE_HABITS=[
+  {id:'sleep',   name:'Slept >6 hours', time:'last night'},
   {id:'wake',    name:'Wake up',        time:'by —'},
-  {id:'brush',   name:'Brush + floss',  time:'AM + PM'},
   {id:'water',   name:'Water',          time:'cups', target:8},
   {id:'exercise',name:'Exercise',       time:'45–60 min'},
   {id:'steps',   name:'10k steps',      time:''},
   {id:'outside', name:'Get outside',    time:''},
   {id:'read',    name:'Read a little',  time:'15 min'},
-  {id:'study',   name:'Study',          time:'— min'},
   {id:'texts',   name:'Reply to texts', time:'10 min'},
   {id:'email',   name:'Check email',    time:'5 min'},
   {id:'calcheck',name:'Check calendar', time:'5 min'},
-  {id:'janjan',  name:'Call JanJan',    time:''},
-  {id:'sleep',   name:'Slept —+ hrs',   time:'last night'},
 ];
 
 // WEEKLY RESETS — once-a-week maintenance. Tap when done; resets daily,
@@ -470,8 +467,9 @@ function renderDeadlineBlocks(deadlines){
   });
 }
 
-// HABITS — base habits plus a "studied?" chip per course
-const HABITS=[...BASE_HABITS,...COURSES.map(c=>({id:'st-'+c.id,name:c.short,time:'studied?'}))];
+// HABITS — per-course "studied?" chips are parked until the fall schedule is
+// set; to bring them back, append ...COURSES.map(c=>({id:'st-'+c.id,name:c.short,time:'studied?'}))
+const HABITS=[...BASE_HABITS];
 const hkey=`ab-h-${localDate}`;
 let hs=ld(hkey,{});
 function rHabits(){
