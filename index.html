@@ -331,8 +331,8 @@ body{font-family:'IBM Plex Sans',sans-serif;background:var(--paper);color:var(--
    Rename courses, change habits, edit the schedule. It's your page.
    ═══════════════════════════════════════════════════════════════ */
 
-// Google OAuth client ID — leave blank until the backend is set up (see README).
-const CLIENT_ID='';
+// Google OAuth client ID (shared with cb-dash; safe to expose — the secret lives in Netlify env vars).
+const CLIENT_ID='142462421541-1p8a2ld5288kld6pcqcie3s4m8htv3ih.apps.googleusercontent.com';
 const REDIRECT_URI=window.location.origin+'/auth/callback';
 const SCOPES='https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/tasks';
 
