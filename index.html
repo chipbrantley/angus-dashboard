@@ -308,10 +308,17 @@ body{font-family:'Libre Franklin',sans-serif;background:var(--paper);color:var(-
   <div class="modal">
     <div class="modal-title" id="mtitle">Edit</div>
     <label>Name</label><input type="text" id="mname">
-    <label>Class time</label><input type="text" id="mct" placeholder="e.g. MWF 10:00–10:50">
-    <label>Next action</label><textarea id="mn" rows="3"></textarea>
-    <label>Last touched</label><input type="text" id="ml" placeholder="e.g. Today, Yesterday, Mon Sep 8…">
-    <label>Notes (optional)</label><textarea id="mo" rows="2"></textarea>
+    <div id="m-course">
+      <label>Class time</label><input type="text" id="mct" placeholder="e.g. MWF 10:00–10:50">
+      <label>Professor</label><input type="text" id="mprof">
+      <label>Location</label><input type="text" id="mloc">
+      <label>Major assignments</label><textarea id="mas" rows="6" placeholder="Paper #1 — due 9/20&#10;Midterm — 10/14&#10;…"></textarea>
+    </div>
+    <div id="m-life">
+      <label>Next action</label><textarea id="mn" rows="3"></textarea>
+      <label>Last touched</label><input type="text" id="ml" placeholder="e.g. Today, Yesterday, Mon Sep 8…">
+      <label>Notes (optional)</label><textarea id="mo" rows="2"></textarea>
+    </div>
     <div class="mfoot">
       <button class="bcancel" onclick="closeM()">Cancel</button>
       <button class="bsave" onclick="saveM()">Save</button>
@@ -708,10 +715,26 @@ const PRIMARY=COURSES;
 let allProjects=ld('ab-projs-v1',[...PRIMARY,...QUEUE]);
 let editId=null;
 
+function isCourse(id){return COURSES.some(c=>c.id===id);}
+// Course cards briefly kept assignment dates in "next action" — carry those over.
+function courseAssign(p){
+  if(p.assign!=null)return p.assign;
+  const def=COURSES.find(c=>c.id===p.id);
+  return def&&p.next&&p.next!==def.next?p.next:'';
+}
 function buildCard(p,cardClass){
   const tag=p.classtime?`<span class="ptag" style="background:var(--accent);color:#fff">${p.classtime}</span>`:'';
   const el=document.createElement('div');el.className=`pc ${cardClass}`;
-  el.innerHTML=`<div class="pc-top"><div class="pname">${p.name}</div>${tag}</div><div class="pc-body"><div><span class="pfl">Next action</span><div class="pnxt">${p.next}</div></div>${p.notes?`<div><span class="pfl">Notes</span><div class="pnxt" style="color:var(--muted)">${p.notes}</div></div>`:''}</div><div class="pc-foot"><span class="plast">Last: ${p.last}</span><button class="ebtn" onclick="openM('${p.id}')">Edit</button></div>`;
+  let body;
+  if(isCourse(p.id)){
+    const facts=[p.prof?`<div style="flex:1"><span class="pfl">Professor</span><div class="pnxt">${p.prof}</div></div>`:'',
+                 p.loc?`<div style="flex:1"><span class="pfl">Location</span><div class="pnxt">${p.loc}</div></div>`:''].join('');
+    body=`${facts?`<div style="display:flex;gap:16px">${facts}</div>`:''}<div><span class="pfl">Major assignments</span><div class="pnxt" style="white-space:pre-wrap">${courseAssign(p)||'—'}</div></div>`;
+  }else{
+    body=`<div><span class="pfl">Next action</span><div class="pnxt">${p.next}</div></div>${p.notes?`<div><span class="pfl">Notes</span><div class="pnxt" style="color:var(--muted)">${p.notes}</div></div>`:''}`;
+  }
+  const foot=isCourse(p.id)?`<span class="plast"></span>`:`<span class="plast">Last: ${p.last}</span>`;
+  el.innerHTML=`<div class="pc-top"><div class="pname">${p.name}</div>${tag}</div><div class="pc-body">${body}</div><div class="pc-foot">${foot}<button class="ebtn" onclick="openM('${p.id}')">Edit</button></div>`;
   return el;
 }
 
@@ -731,10 +754,19 @@ function openM(id){
   const p=allProjects.find(x=>x.id===id)||def;
   document.getElementById('mtitle').textContent=p.name.replace(/<[^>]+>/g,'');
   document.getElementById('mname').value=p.name.replace(/<[^>]+>/g,'')||'';
-  document.getElementById('mct').value=p.classtime||'';
-  document.getElementById('mn').value=p.next||'';
-  document.getElementById('ml').value=p.last||'';
-  document.getElementById('mo').value=p.notes||'';
+  const course=isCourse(id);
+  document.getElementById('m-course').style.display=course?'block':'none';
+  document.getElementById('m-life').style.display=course?'none':'block';
+  if(course){
+    document.getElementById('mct').value=p.classtime||'';
+    document.getElementById('mprof').value=p.prof||'';
+    document.getElementById('mloc').value=p.loc||'';
+    document.getElementById('mas').value=courseAssign(p);
+  }else{
+    document.getElementById('mn').value=p.next||'';
+    document.getElementById('ml').value=p.last||'';
+    document.getElementById('mo').value=p.notes||'';
+  }
   document.getElementById('overlay').classList.add('open');
 }
 function closeM(){document.getElementById('overlay').classList.remove('open');}
@@ -744,10 +776,16 @@ function saveM(){
   if(!p){const def=all.find(x=>x.id===editId)||{id:editId};p={...def};allProjects.push(p);}
   const newName=document.getElementById('mname').value.trim();
   if(newName)p.name=newName;
-  p.classtime=document.getElementById('mct').value.trim();
-  p.next=document.getElementById('mn').value;
-  p.last=document.getElementById('ml').value;
-  p.notes=document.getElementById('mo').value;
+  if(isCourse(editId)){
+    p.classtime=document.getElementById('mct').value.trim();
+    p.prof=document.getElementById('mprof').value.trim();
+    p.loc=document.getElementById('mloc').value.trim();
+    p.assign=document.getElementById('mas').value;
+  }else{
+    p.next=document.getElementById('mn').value;
+    p.last=document.getElementById('ml').value;
+    p.notes=document.getElementById('mo').value;
+  }
   sv('ab-projs-v1',allProjects);rProjs();closeM();
   pushSharedState();
 }
