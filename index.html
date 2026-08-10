@@ -337,13 +337,14 @@ const CLIENT_ID='142462421541-1p8a2ld5288kld6pcqcie3s4m8htv3ih.apps.googleuserco
 const REDIRECT_URI=window.location.origin+'/auth/callback';
 const SCOPES='https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/tasks';
 
-// COURSES — fall 2026 (short = habit chip label when course chips are on).
+// COURSES — fall 2026, in the slot order Angus arranged on the live slate
+// (short = habit chip label when course chips are turned back on).
 const COURSES=[
-  {id:'c1',short:'Hist',  name:'HIST 125 — The Age of Discovery',classtime:'TR 8:00–9:15',prof:'Carmen McEvoy',loc:'',assign:'',next:'',last:'',notes:''},
-  {id:'c2',short:'French',name:'FRFS 350 — Writing and Speaking French',classtime:'MWF 10:00–10:50',prof:'Aymeric Glacet',loc:'',assign:'',next:'',last:'',notes:''},
-  {id:'c3',short:'Phil',  name:'PHIL 101 — God, Death and the Meaning of Life',classtime:'TR 11:00–12:15',prof:'Chris Conn',loc:'',assign:'',next:'',last:'',notes:''},
-  {id:'c4',short:'Humn',  name:'HUMN 217 — Good Copies, Bad Copies',classtime:'TR 9:30–10:45',prof:'Shelley MacLaren',loc:'',assign:'',next:'',last:'',notes:''},
-  {id:'c5',short:'Embark',name:'FYRP 136 — Embark',classtime:'M 1:00–1:50',prof:'Betsy Sandlin',loc:'duPont Library G26',assign:'',next:'',last:'',notes:''},
+  {id:'c1',short:'French',name:'FRFS 350: Writing and Speaking French',classtime:'MWF, 10-10:50am',prof:'Aymeric Glacet',loc:'',assign:'',next:'',last:'',notes:''},
+  {id:'c2',short:'Embark',name:'FYRP 136: Embark',classtime:'M, 1-1:50pm',prof:'Betsy Sandlin',loc:'duPont Library G26',assign:'',next:'',last:'',notes:''},
+  {id:'c3',short:'Hist',  name:'HIST 125: The Age of Discovery: Encounter of Two Worlds',classtime:'TR, 8-9:15am',prof:'Carmen McEvoy',loc:'',assign:'',next:'',last:'',notes:''},
+  {id:'c4',short:'Humn',  name:'HUMN 217: Good Copies, Bad Copies',classtime:'TR, 9:30-10:45am',prof:'Shelley MacLaren',loc:'',assign:'',next:'',last:'',notes:''},
+  {id:'c5',short:'Phil',  name:'PHIL 101: God, Death and the Meaning of Life',classtime:'TR, 11am-12:15pm',prof:'Chris Conn',loc:'',assign:'',next:'',last:'',notes:''},
 ];
 
 // DAILY HABITS — Angus's list. The "studied?" chips for each course are
@@ -764,7 +765,7 @@ function buildCard(p,cardClass){
   }else{
     body=`<div><span class="pfl">Next action</span><div class="pnxt">${p.next}</div></div>${p.notes?`<div><span class="pfl">Notes</span><div class="pnxt" style="color:var(--muted)">${p.notes}</div></div>`:''}`;
   }
-  const foot=isCourse(p.id)?`<span class="plast"></span>`:`<span class="plast">Last: ${p.last}</span>`;
+  const foot=isCourse(p.id)?`<span class="plast">${p.last||''}</span>`:`<span class="plast">Last: ${p.last}</span>`;
   el.innerHTML=`<div class="pc-top"><div class="pname">${p.name}</div>${tag}</div><div class="pc-body">${body}</div><div class="pc-foot">${foot}<button class="ebtn" onclick="openM('${p.id}')">Edit</button></div>`;
   return el;
 }
