@@ -753,6 +753,35 @@ function saveM(){
   p.last=document.getElementById('ml').value;
   p.notes=document.getElementById('mo').value;
   sv('ab-projs-v1',allProjects);rProjs();closeM();
+  pushSharedState();
+}
+
+// SHARED CARD SLATE — one copy on the server (Netlify Blobs) so every device
+// sees the same Courses + Life Admin. Server wins on load; edits made in a
+// Google-connected browser write back for everyone. Edits in an unconnected
+// browser stay local and revert on the next refresh.
+function pushSharedState(){
+  const token=localStorage.getItem('gcal_refresh_token');
+  if(!token)return;
+  fetch('/api/state',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({refresh_token:token,projects:allProjects}),
+  }).catch(()=>{});
+}
+async function loadSharedState(){
+  try{
+    const res=await fetch('/api/state');
+    if(!res.ok)return;
+    const data=await res.json();
+    if(Array.isArray(data.projects)&&data.projects.length){
+      allProjects=data.projects;
+      sv('ab-projs-v1',allProjects);
+      rProjs();
+    }else if(data.projects===null){
+      pushSharedState(); // first connected visit seeds the server with this browser's slate
+    }
+  }catch(e){}
 }
 document.getElementById('overlay').addEventListener('click',function(e){if(e.target===this)closeM();});
 
@@ -809,6 +838,7 @@ async function completeTask(taskId,el){
 loadCalendar();
 logYesterdayHabitsIfNeeded();
 loadTasks();
+loadSharedState();
 </script>
 </body>
 </html>

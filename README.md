@@ -6,9 +6,11 @@ A one-page daily dashboard for keeping track of school and life, cloned from
 - **`index.html`** — the whole app. All the customizable content (courses,
   habits, weekly resets, daily schedule, life-admin cards) lives in the
   clearly-marked **CONFIG** section at the top of the `<script>`.
-- **`netlify/functions/`** — four small serverless functions for the Google
-  integration (Calendar events, `#dashboard` deadlines, Google Tasks, and an
-  optional Google Doc log).
+- **`netlify/functions/`** — five small serverless functions: the Google
+  integration (Calendar events, `#dashboard` deadlines, Google Tasks, an
+  optional Google Doc log) plus `state.mjs`, which keeps the card slate
+  (Courses + Life Admin) in Netlify Blobs so edits sync across devices.
+  Reads are public; writes require a browser that has connected Google.
 - **`netlify.toml`** — routes `/api/*` and `/auth/callback` to those functions.
 
 The page works fine with **zero setup** — habits, courses, notes, and weekly
