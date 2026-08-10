@@ -9,17 +9,26 @@ export default async (req) => {
   const store = getStore('dashboard');
 
   if (req.method === 'GET') {
-    const data = await store.get('projects', { type: 'json' });
-    return Response.json(data || { projects: null });
+    const [proj, scheds] = await Promise.all([
+      store.get('projects', { type: 'json' }),
+      store.get('schedules', { type: 'json' }),
+    ]);
+    return Response.json({
+      projects: (proj && proj.projects) || null,
+      schedules: (scheds && scheds.schedules) || null,
+      updatedAt: (proj && proj.updatedAt) || null,
+    });
   }
 
   if (req.method === 'POST') {
     const body = await req.json().catch(() => null);
-    if (!body || !Array.isArray(body.projects) || !(body.refresh_token || body.write_key)) {
+    const hasProjects = body && Array.isArray(body.projects);
+    const hasSchedules = body && body.schedules && typeof body.schedules === 'object';
+    if (!body || (!hasProjects && !hasSchedules) || !(body.refresh_token || body.write_key)) {
       return Response.json({ error: 'Bad request' }, { status: 400 });
     }
-    if (JSON.stringify(body.projects).length > 100000) {
-      return Response.json({ error: 'Slate too large' }, { status: 413 });
+    if (JSON.stringify(body.projects || body.schedules).length > 100000) {
+      return Response.json({ error: 'Payload too large' }, { status: 413 });
     }
 
     // Two ways to authorize a write: a browser that has connected Google
@@ -45,10 +54,9 @@ export default async (req) => {
       }
     }
 
-    await store.setJSON('projects', {
-      projects: body.projects,
-      updatedAt: new Date().toISOString(),
-    });
+    const now = new Date().toISOString();
+    if (hasProjects) await store.setJSON('projects', { projects: body.projects, updatedAt: now });
+    if (hasSchedules) await store.setJSON('schedules', { schedules: body.schedules, updatedAt: now });
     return Response.json({ ok: true });
   }
 
