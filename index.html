@@ -785,8 +785,8 @@ async function loadSharedState(){
       allProjects=data.projects;
       sv('ab-projs-v1',allProjects);
       rProjs();
-    }else if(data.projects===null){
-      pushSharedState(); // first connected visit seeds the server with this browser's slate
+    }else{
+      pushSharedState(); // server has no slate yet — seed it from this browser
     }
   }catch(e){}
 }
