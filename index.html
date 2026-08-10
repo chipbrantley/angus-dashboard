@@ -265,7 +265,7 @@ body{font-family:'Libre Franklin',sans-serif;background:var(--paper);color:var(-
   <div class="habits-row" id="habits-row"></div>
 
   <!-- SCHEDULE -->
-  <div class="ss"><div class="slabel">Daily Time Structure — class days</div><div class="tblocks" id="tblocks"></div></div>
+  <div class="ss"><div class="slabel" id="sched-label">Daily Time Structure</div><div class="tblocks" id="tblocks"></div></div>
 
   <!-- CALENDAR WEEK -->
   <div class="slabel">This Week — live from Google Calendar</div>
@@ -337,23 +337,13 @@ const CLIENT_ID='142462421541-1p8a2ld5288kld6pcqcie3s4m8htv3ih.apps.googleuserco
 const REDIRECT_URI=window.location.origin+'/auth/callback';
 const SCOPES='https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/documents https://www.googleapis.com/auth/tasks';
 
-// COURSES — these are example names. Rename them (short = habit chip label).
+// COURSES — fall 2026 (short = habit chip label when course chips are on).
 const COURSES=[
-  {id:'c1',short:'Calc',   name:'Calculus I',status:'active',
-   next:'Syllabus day one: put every problem-set and exam date on Google Calendar with #dashboard in the description. Start problem sets the day they\'re assigned, not the day they\'re due.',
-   last:'Not started',notes:'Example course — rename me. Find the math help room in week 1, before you need it.'},
-  {id:'c2',short:'Comp',   name:'English Comp',status:'active',
-   next:'Calendar every essay deadline with #dashboard. Rough draft a week early — office hours are free grade insurance.',
-   last:'Not started',notes:'Example course — rename me.'},
-  {id:'c3',short:'Psych',  name:'Intro Psych',status:'active',
-   next:'Do the reading before lecture, not after. A 15-minute weekly review beats an all-nighter before the midterm.',
-   last:'Not started',notes:'Example course — rename me.'},
-  {id:'c4',short:'Spanish',name:'Spanish',status:'active',
-   next:'Ten minutes daily beats an hour on Sunday. Talk in section even when it feels dumb.',
-   last:'Not started',notes:'Example course — rename me.'},
-  {id:'c5',short:'C5',name:'Course Five',status:'active',
-   next:'Rename this card (Edit → Name), then put its syllabus dates on the calendar with #dashboard.',
-   last:'Not started',notes:'Placeholder — rename me.'},
+  {id:'c1',short:'Hist',  name:'HIST 125 — The Age of Discovery',classtime:'TR 8:00–9:15',prof:'Carmen McEvoy',loc:'',assign:'',next:'',last:'',notes:''},
+  {id:'c2',short:'French',name:'FRFS 350 — Writing and Speaking French',classtime:'MWF 10:00–10:50',prof:'Aymeric Glacet',loc:'',assign:'',next:'',last:'',notes:''},
+  {id:'c3',short:'Phil',  name:'PHIL 101 — God, Death and the Meaning of Life',classtime:'TR 11:00–12:15',prof:'Chris Conn',loc:'',assign:'',next:'',last:'',notes:''},
+  {id:'c4',short:'Humn',  name:'HUMN 217 — Good Copies, Bad Copies',classtime:'TR 9:30–10:45',prof:'Shelley MacLaren',loc:'',assign:'',next:'',last:'',notes:''},
+  {id:'c5',short:'Embark',name:'FYRP 136 — Embark',classtime:'M 1:00–1:50',prof:'Betsy Sandlin',loc:'duPont Library G26',assign:'',next:'',last:'',notes:''},
 ];
 
 // DAILY HABITS — Angus's list. The "studied?" chips for each course are
@@ -384,24 +374,66 @@ const LIFE_PRACTICES=[
   {id:'sunday',  name:'Sunday plan (20 min)',freq:'Sunday'},
 ];
 
-// DAILY TIME STRUCTURE — a class-day template. Edit to match the real
-// schedule once courses are registered. Keep SCHED_RANGES in sync
-// (minutes from midnight, [start,end] per block) so "now" highlights.
-const SCHED=[
-  {t:'~7:30',      n:'Wake · make bed\nbreakfast'},
-  {t:'8:30–10:00', n:'Class block ①'},
-  {t:'10:00–11:00',n:'Review notes\n+ reading'},
-  {t:'11:00–12:00',n:'Class block ②'},
-  {t:'12:00–1:00', n:'Lunch + walk'},
-  {t:'1:00–3:00',  n:'Deep work —\nassignments first'},
-  {t:'3:00–4:30',  n:'Class block ③\n/ office hours'},
-  {t:'4:30–6:00',  n:'Gym · sport\n· club'},
-  {t:'6:00–7:30',  n:'Dinner + people'},
-  {t:'7:30–9:30',  n:'Library block'},
-  {t:'9:30–10:00', n:'Plan tomorrow\n+ shutdown'},
-  {t:'10:00–12:00',n:'🌙 Free ·\nwind down'},
-];
-const SCHED_RANGES=[[450,510],[510,600],[600,660],[660,720],[720,780],[780,900],[900,990],[990,1080],[1080,1170],[1170,1290],[1290,1320],[1320,1440]];
+// DAILY TIME STRUCTURE — auto-switches by weekday. Each block carries its own
+// minute range [s,e) from midnight for the "now" highlight. McClurg (dining)
+// is next to Ayres, so mornings route through breakfast before first class.
+const SCHEDULES={
+  mon:{label:'Monday',blocks:[
+    {s:480, e:540, t:'~8:00',      n:'Wake · make bed\nbreakfast @ McClurg'},
+    {s:540, e:600, t:'9:00–9:50',  n:'Review notes\n· walk to class'},
+    {s:600, e:650, t:'10:00–10:50',n:'FRST 350\nFrench'},
+    {s:660, e:720, t:'11:00–12:00',n:'Study block'},
+    {s:720, e:770, t:'12:00–12:50',n:'Lunch @ McClurg'},
+    {s:780, e:830, t:'1:00–1:50',  n:'FYRP 136 Embark\nduPont G26'},
+    {s:840, e:960, t:'2:00–4:00',  n:'Deep work —\nassignments first'},
+    {s:960, e:1080,t:'4:00–6:00',  n:'Gym · outside\n· club'},
+    {s:1080,e:1170,t:'6:00–7:30',  n:'Dinner + people'},
+    {s:1170,e:1290,t:'7:30–9:30',  n:'Library block'},
+    {s:1290,e:1320,t:'9:30–10:00', n:'Plan tomorrow\n+ shutdown'},
+    {s:1320,e:1440,t:'10:00–12:00',n:'🌙 Free ·\nwind down'}]},
+  wf:{label:'Wed / Fri',blocks:[
+    {s:480, e:540, t:'~8:00',      n:'Wake · make bed\nbreakfast @ McClurg'},
+    {s:540, e:600, t:'9:00–9:50',  n:'Review notes\n· walk to class'},
+    {s:600, e:650, t:'10:00–10:50',n:'FRST 350\nFrench'},
+    {s:660, e:780, t:'11:00–1:00', n:'Deep work —\nassignments first'},
+    {s:780, e:840, t:'1:00–2:00',  n:'Lunch @ McClurg'},
+    {s:840, e:960, t:'2:00–4:00',  n:'Deep work ②\n/ office hours'},
+    {s:960, e:1080,t:'4:00–6:00',  n:'Gym · outside\n· club'},
+    {s:1080,e:1170,t:'6:00–7:30',  n:'Dinner + people'},
+    {s:1170,e:1290,t:'7:30–9:30',  n:'Library block'},
+    {s:1290,e:1320,t:'9:30–10:00', n:'Plan tomorrow\n+ shutdown'},
+    {s:1320,e:1440,t:'10:00–12:00',n:'🌙 Free ·\nwind down'}]},
+  tr:{label:'Tue / Thu',blocks:[
+    {s:420, e:435, t:'~7:00',      n:'Wake ·\nmake bed'},
+    {s:435, e:470, t:'7:15–7:50',  n:'Breakfast @ McClurg\n→ walk to class'},
+    {s:480, e:555, t:'8:00–9:15',  n:'HIST 125\nAge of Discovery'},
+    {s:570, e:645, t:'9:30–10:45', n:'HUMN 217\nGood Copies'},
+    {s:660, e:735, t:'11:00–12:15',n:'PHIL 101\nGod, Death…'},
+    {s:735, e:795, t:'12:15–1:15', n:'Lunch @ McClurg'},
+    {s:795, e:945, t:'1:15–3:45',  n:'Deep work —\nassignments first'},
+    {s:960, e:1080,t:'4:00–6:00',  n:'Gym · outside\n· club'},
+    {s:1080,e:1170,t:'6:00–7:30',  n:'Dinner + people'},
+    {s:1170,e:1290,t:'7:30–9:30',  n:'Library block'},
+    {s:1290,e:1320,t:'9:30–10:00', n:'Plan tomorrow\n+ shutdown'},
+    {s:1320,e:1440,t:'10:00–12:00',n:'🌙 Free ·\nwind down'}]},
+  sat:{label:'Saturday',blocks:[
+    {s:570, e:660, t:'~9:30',      n:'Sleep in ·\nbrunch @ McClurg'},
+    {s:660, e:780, t:'11:00–1:00', n:'Catch-up\nwork block'},
+    {s:780, e:1080,t:'1:00–6:00',  n:'Free · outside\n· sports'},
+    {s:1080,e:1200,t:'6:00–8:00',  n:'Dinner + people'},
+    {s:1200,e:1440,t:'8:00–12:00', n:'🌙 Social'}]},
+  sun:{label:'Sunday',blocks:[
+    {s:570, e:660, t:'~9:30',      n:'Sleep in ·\nbrunch @ McClurg'},
+    {s:660, e:750, t:'11:00–12:30',n:'Weekly resets —\nlaundry · room · budget'},
+    {s:750, e:810, t:'12:30–1:30', n:'Lunch'},
+    {s:810, e:930, t:'1:30–3:30',  n:'Work block —\nget ahead'},
+    {s:930, e:1020,t:'3:30–5:00',  n:'Outside · gym'},
+    {s:1020,e:1050,t:'5:00–5:30',  n:'Sunday plan\n(20 min)'},
+    {s:1050,e:1140,t:'5:30–7:00',  n:'Dinner'},
+    {s:1140,e:1290,t:'7:00–9:30',  n:'Library —\nMonday prep'},
+    {s:1290,e:1440,t:'9:30–12:00', n:'🌙 Wind down'}]},
+};
+const DAY_KEYS=['sun','mon','tr','wf','tr','wf','sat'];
 
 // LIFE ADMIN — the slow-burn stuff that sinks freshmen when ignored.
 const QUEUE=[
@@ -516,15 +548,14 @@ function rLifeMini(){
 }
 rLifeMini();
 
-// SCHEDULE
-function curBlock(){
-  const h=NOW.getHours(),m=NOW.getMinutes(),t=h*60+m;
-  return SCHED_RANGES.findIndex(([s,e])=>t>=s&&t<e);
-}
+// SCHEDULE — render today's template
 (()=>{
-  const w=document.getElementById('tblocks'),c=curBlock();
-  SCHED.forEach((b,i)=>{
-    const el=document.createElement('div');el.className=`tb${i===c?' now':''}`;
+  const sched=SCHEDULES[DAY_KEYS[NOW.getDay()]];
+  document.getElementById('sched-label').textContent=`Daily Time Structure — ${sched.label}`;
+  const t=NOW.getHours()*60+NOW.getMinutes();
+  const w=document.getElementById('tblocks');
+  sched.blocks.forEach(b=>{
+    const el=document.createElement('div');el.className=`tb${t>=b.s&&t<b.e?' now':''}`;
     el.innerHTML=`<div class="tb-t">${b.t}</div><div class="tb-n">${b.n}</div>`;
     w.appendChild(el);
   });
