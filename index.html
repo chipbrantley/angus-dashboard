@@ -760,13 +760,20 @@ function saveM(){
 // sees the same Courses + Life Admin. Server wins on load; edits made in a
 // Google-connected browser write back for everyone. Edits in an unconnected
 // browser stay local and revert on the next refresh.
+// Visiting the page once with #key=XXXX stores the family write key and
+// cleans the URL; that browser can then edit cards without connecting Google.
+if(location.hash.startsWith('#key=')){
+  try{localStorage.setItem('ab-write-key',location.hash.slice(5));}catch{}
+  history.replaceState(null,'',location.pathname+location.search);
+}
 function pushSharedState(){
   const token=localStorage.getItem('gcal_refresh_token');
-  if(!token)return;
+  const writeKey=localStorage.getItem('ab-write-key');
+  if(!token&&!writeKey)return;
   fetch('/api/state',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({refresh_token:token,projects:allProjects}),
+    body:JSON.stringify({refresh_token:token||undefined,write_key:writeKey||undefined,projects:allProjects}),
   }).catch(()=>{});
 }
 async function loadSharedState(){
