@@ -308,13 +308,7 @@ body{font-family:'Libre Franklin',sans-serif;background:var(--paper);color:var(-
   <div class="modal">
     <div class="modal-title" id="mtitle">Edit</div>
     <label>Name</label><input type="text" id="mname">
-    <label>Status</label>
-    <select id="ms">
-      <option value="active">Active — in motion</option>
-      <option value="watch">Watch — needs attention soon</option>
-      <option value="stalled">Stalled — nothing moved</option>
-      <option value="steady">Steady — on track</option>
-    </select>
+    <label>Class time</label><input type="text" id="mct" placeholder="e.g. MWF 10:00–10:50">
     <label>Next action</label><textarea id="mn" rows="3"></textarea>
     <label>Last touched</label><input type="text" id="ml" placeholder="e.g. Today, Yesterday, Mon Sep 8…">
     <label>Notes (optional)</label><textarea id="mo" rows="2"></textarea>
@@ -711,14 +705,13 @@ async function logYesterdayHabitsIfNeeded(){
 
 // COURSE + LIFE ADMIN CARDS
 const PRIMARY=COURSES;
-const tmap={active:['ta','Active'],watch:['tw','Watch'],stalled:['ts','Stalled'],steady:['tq','Steady']};
 let allProjects=ld('ab-projs-v1',[...PRIMARY,...QUEUE]);
 let editId=null;
 
 function buildCard(p,cardClass){
-  const[tc,tl]=tmap[p.status]||['tq','Steady'];
+  const tag=p.classtime?`<span class="ptag" style="background:var(--accent);color:#fff">${p.classtime}</span>`:'';
   const el=document.createElement('div');el.className=`pc ${cardClass}`;
-  el.innerHTML=`<div class="pc-top"><div class="pname">${p.name}</div><span class="ptag ${tc}">${tl}</span></div><div class="pc-body"><div><span class="pfl">Next action</span><div class="pnxt">${p.next}</div></div>${p.notes?`<div><span class="pfl">Notes</span><div class="pnxt" style="color:var(--muted)">${p.notes}</div></div>`:''}</div><div class="pc-foot"><span class="plast">Last: ${p.last}</span><button class="ebtn" onclick="openM('${p.id}')">Edit</button></div>`;
+  el.innerHTML=`<div class="pc-top"><div class="pname">${p.name}</div>${tag}</div><div class="pc-body"><div><span class="pfl">Next action</span><div class="pnxt">${p.next}</div></div>${p.notes?`<div><span class="pfl">Notes</span><div class="pnxt" style="color:var(--muted)">${p.notes}</div></div>`:''}</div><div class="pc-foot"><span class="plast">Last: ${p.last}</span><button class="ebtn" onclick="openM('${p.id}')">Edit</button></div>`;
   return el;
 }
 
@@ -738,7 +731,7 @@ function openM(id){
   const p=allProjects.find(x=>x.id===id)||def;
   document.getElementById('mtitle').textContent=p.name.replace(/<[^>]+>/g,'');
   document.getElementById('mname').value=p.name.replace(/<[^>]+>/g,'')||'';
-  document.getElementById('ms').value=p.status||'active';
+  document.getElementById('mct').value=p.classtime||'';
   document.getElementById('mn').value=p.next||'';
   document.getElementById('ml').value=p.last||'';
   document.getElementById('mo').value=p.notes||'';
@@ -751,7 +744,7 @@ function saveM(){
   if(!p){const def=all.find(x=>x.id===editId)||{id:editId};p={...def};allProjects.push(p);}
   const newName=document.getElementById('mname').value.trim();
   if(newName)p.name=newName;
-  p.status=document.getElementById('ms').value;
+  p.classtime=document.getElementById('mct').value.trim();
   p.next=document.getElementById('mn').value;
   p.last=document.getElementById('ml').value;
   p.notes=document.getElementById('mo').value;
